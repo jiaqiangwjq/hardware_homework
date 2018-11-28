@@ -73,6 +73,7 @@ START:  MOV AX,DATA
                 ;CALL LCD_DISP
                 
         l1:     jmp     START_1 ;l1
+                
                 ;显示第三行(有客)
 START_t:  MOV AX,DATA
                 MOV DS,AX               
@@ -231,7 +232,7 @@ DELAY_1: LOOP DELAY
     CMP AL, 0F0H
     JNE ENCODE
     
-ENCODE: MOV BX, 0004H   ;建立地址指针，现指向 6
+ENCODE: MOV BX, 0004H   ;建立地址指针，现指向 4
     IN AL, DX
 NEXT_TRY: CMP AL, TABLE[BX]
     JE DONE
@@ -246,10 +247,10 @@ DONE: CMP AL, 07FH   ;启
     
     CMP AL, 0DFH
     call ZERO
-    MOV AH, 00H
-    MOV DX, PORT_B
-    OUT DX,AL
-    JMP START
+    ;MOV AH, 00H
+    ;MOV DX, PORT_B
+    ;OUT DX,AL
+    ;JMP START
 
 JUMP_ST: pop cx
     CMP CL, 00H
@@ -279,26 +280,31 @@ ENGINE_OFF:
 
 DAY: MOV CH, 01H    ; CH 置 1 表示现在是白天,将要切换到夜晚
     push cx
-    MOV BX, 00H    ; 白天计费
+    ;MOV BX, 00H    ; 白天计费
     CALL CHARGE
-    LEA BX, HZ_TAB
-    ADD BX, 64
-    ADD [BX], 0001H
-    ADD BX, 16
-    ADD [BX], 0002H
-    JMP START       ; 要把数据送到显示屏上啊
+    MOV BX, 0DH
+    ADD DS:[BX], 0001H
+    MOV BX, 0EH
+    ADD DS:[BX], 0002H
+    ;ADD BX, 64
+    ;ADD [BX], 0001H
+    ;ADD BX, 16
+    ;ADD [BX], 0002H
+    JMP START_t       ; 要把数据送到显示屏上啊
    
 NIGHT: MOV CH, 00H  ; CH 置 0 表示现在是夜晚,将要切换到白天      
     push cx
 	CALL CHARGE
-    LEA BX, HZ_TAB
-    ADD BX, 64
-    ADD [BX], 0001H
-    ADD BX, 16
-    ADD [BX], 0003H
-    JMP START
+    MOV BX, 0DH
+    ADD DS:[BX], 0001H
+    MOV BX, 0EH
+    ADD DS:[BX], 0003H
+    JMP START_t
 
-ZERO: MOV BX, 00H   ; 清零
+ZERO: MOV BX, 50H   ; 清零
+    MOV DS:[BX], 0A3B0H
+    ADD BX, 16
+    MOV DS:[BX], 0A3B0H
     JMP START
     
     ;8254 初始化:计时 2S
@@ -329,4 +335,4 @@ CHARGE:MOV AL, 35H	;通道 0 方式字；先低后高；方式 2
         JNZ T2
 
 code ends
-     end start
+     end pre_START
