@@ -258,7 +258,9 @@ ALARM: MOV DX, PORT_CTL
     MOV DX, PORT_B
     MOV AL, 80H
     OUT DX, AL
-    call CONTROL
+    call CONTROL        ;2s 响铃
+    MOV AL, 00H
+    OUT DX, AL
     JMP START_2
 
 JUMP_ST: mov bx,00h
@@ -276,7 +278,7 @@ JUMP_DN: mov bx, 02h
 ENGINE_ON:
     mov bx,00h
     mov ax, 01h
-    mov my_stack[bx], ax    ;寄存器可以指明是字操作还是字节操作
+    mov my_stack[bx], ax    
     MOV DX, PORT_0832A   
     MOV AL, 0FFH
     OUT DX, AL
@@ -325,6 +327,12 @@ DAY: mov bx, 02h
     call START_X
     call CONTROL
 
+    MOV BX, 0BH
+    mov ax, HZX_TAB[BX]
+    add ax, 0100h                           ;这里公里数跳一下
+    MOV HZX_TAB[BX], AX
+    call START_X
+
     MOV BX, 1BH
     mov ax, HZX_TAB[BX]
     add ax, 0100h                           ;04
@@ -346,6 +354,12 @@ DAY: mov bx, 02h
     call START_X
     call CONTROL
 
+    MOV BX, 0BH
+    mov ax, HZX_TAB[BX]
+    add ax, 0100h                           ;这里公里数跳一下
+    MOV HZX_TAB[BX], AX
+    call START_X
+
     MOV BX, 1BH
     mov ax, HZX_TAB[BX]
     add ax, 0100h                           ;07
@@ -364,8 +378,13 @@ DAY: mov bx, 02h
     mov ax, HZX_TAB[BX]
     add ax, 0100h                           ;09
     MOV HZX_TAB[BX], AX
+    
+    MOV BX, 0BH
+    mov ax, HZX_TAB[BX]
+    add ax, 0100h                           ;这里公里数跳一下
+    MOV HZX_TAB[BX], AX
     call START_X
-    call CONTROL           
+    ;call CONTROL           
     JMP START_2                     ;跳转到等待按键处
    
 NIGHT: mov bx, 02h
@@ -392,6 +411,12 @@ NIGHT: mov bx, 02h
     call START_X
     call CONTROL
 
+    MOV BX, 0BH
+    mov ax, HZX_TAB[BX]
+    add ax, 0100h                           ;这里公里数跳一下
+    MOV HZX_TAB[BX], AX
+    call START_X
+
     MOV BX, 1BH
     mov ax, HZX_TAB[BX]
     add ax, 0200h                           ;14
@@ -405,6 +430,12 @@ NIGHT: mov bx, 02h
     MOV HZX_TAB[BX], AX
     call START_X
     call CONTROL
+
+    MOV BX, 0BH
+    mov ax, HZX_TAB[BX]
+    add ax, 0100h                           ;这里公里数跳一下
+    MOV HZX_TAB[BX], AX
+    call START_X
 
     MOV BX, 1BH
     mov ax, HZX_TAB[BX]
@@ -423,6 +454,12 @@ NIGHT: mov bx, 02h
     call START_X
     call CONTROL
 
+    MOV BX, 0BH
+    mov ax, HZX_TAB[BX]
+    add ax, 0100h                           ;这里公里数跳一下
+    MOV HZX_TAB[BX], AX
+    call START_X
+
     MOV BX, 1BH
     mov ax, HZX_TAB[BX]
     add ax, 0200h                            ;22
@@ -437,6 +474,12 @@ NIGHT: mov bx, 02h
     call START_X
     call CONTROL
 
+    MOV BX, 0BH
+    mov ax, HZX_TAB[BX]
+    add ax, 0100h                           ;这里公里数跳一下
+    MOV HZX_TAB[BX], AX
+    call START_X
+
     MOV BX, 1BH
     mov ax, HZX_TAB[BX]
     add ax, 0200h                           ;26
@@ -448,16 +491,24 @@ NIGHT: mov bx, 02h
     mov ax, HZX_TAB[BX]
     add ax, 0200h                           ;28
     MOV HZX_TAB[BX], AX
+
+    MOV BX, 0BH
+    mov ax, HZX_TAB[BX]
+    add ax, 0100h                           ;这里公里数跳一下
+    MOV HZX_TAB[BX], AX
     call START_X
-    call CONTROL           
+    ;call CONTROL           
     JMP START_2                     ;跳转到等待按键处
 
 ZZ: MOV BX, 19H
-
     mov AX, 0B0A3H
-    MOV HZX_TAB[BX], AX 
+    MOV HZX_TAB[BX], AX             ;清零操作
     MOV BX, 1BH
 
+    mov AX, 0B0A3H
+    MOV HZX_TAB[BX], AX
+
+    MOV BX, 0BH
     mov AX, 0B0A3H
     MOV HZX_TAB[BX], AX
     CALL START_X
