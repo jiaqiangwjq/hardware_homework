@@ -1,24 +1,25 @@
 ; =============;
-; HQFC-A ����  ;
-; Ӳ���γ����  ;
-; ���⳵�Ƽ���  ;
+; HQFC-A 机箱  ;
+; 硬件课程设计  ;
+; 出租车计价器  ;
 ; =============;
 
 ;================================================================
-; 8255: CS �� 288H ~ 28FH, PA0 ~ PA7 �� 128x64 Һ������ D7 ~ D0,  
-; PB0 �Ӽ����� 3, PC4 ~ PC7 �Ӽ����� 0 ~ 3,                       
-; PC0 ��Һ���� D/I ��, PC1 �� RW ��, PC2 �� E �ˡ�                
-; ���Է�ʽ��: 88H                                                 
+; 8255: CS 接 288H ~ 28FH, PA0 ~ PA7 接 128x64 液晶屏的 D7 ~ D0,  
+; PB0 接键盘行 3, PC4 ~ PC7 接键盘列 0 ~ 3,                       
+; PC0 接液晶屏 D/I 端, PC1 接 RW 端, PC2 接 E 端。                
+; 所以方式字: 88H                                                 
 ;
-; 8254: CS �� 280H ~ 287H, GATE0��GATE1 �� +5V, CLK0 �� 2MHZ, 
-; OUT0 �� CLK1, OUT1 �� PB0
+; 8254: CS 接 280H ~ 287H, GATE0、GATE1 接 +5V, CLK0 接 2MHZ, 
+; OUT0 接 CLK1, OUT1 接 PB0
 ;
-; 0832: CS �� 290H ~ 297H
+; 0832: CS 接 290H ~ 297H
 ;
-; ���� 0: ����/ֹͣ
-; ���� 1: ����/ҹ��
-; ���� 2: ����
-; ���� 3: ������(��δʵ��)
+; 数字 0: 启动/停止
+; 数字 1: 白天/夜晚
+; 数字 2: 清零
+; 数字 3: 跑马灯
+; 开关 K1 键: 按喇叭
 ;================================================================
 
 
@@ -37,64 +38,64 @@ PORT_8254_CTL EQU 283H
 
 DATA            SEGMENT
 
-;�ճ���                 ;  �ո�             ��       ��               0      0     �ո�
+;空车表                 ;  空格             空       车               0      0     空格
 HZK_TAB          DW 0A3A0H, 0A3A0H, 0BFD5H, 0B3B5H, 0A3A0H, 0A3B0H, 0A3B0H, 0A3A0H
-                 ;  �ո�             �ո�     �ո�    �ո�     �ո�           �ո�
+                 ;  空格             空格     空格    空格     空格           空格
                  DW 0A3A0H, 0A3A0H, 0A3A0H, 0A3A0H, 0A3A0H, 0A3A0H, 0A3A0H, 0A3A0H
 
-;�пͱ�                 ;  �ո�             �ո�     �ո�     �ո�    �ո�    �ո�
+;有客表                 ;  空格             空格     空格     空格    空格    空格
 HZY_TAB         DW 0A3A0H, 0A3A0H, 0A3A0H, 0A3A0H, 0A3A0H, 0A3A0H, 0A3A0H, 0A3A0H
-                 ;  �ո�             ��       ��               0      0      �ո� 
+                 ;  空格             有       客               0      0      空格 
                 DW 0A3A0H, 0A3A0H, 0D3D0H, 0BFCDH, 0A3A0H, 0A3B0H, 0A3B0H, 0A3A0H 
                 
-;����۸��       ;  �ո�             ��      ��     �ո�       0       0     �ո�
+;公里价格表       ;  空格             公      里     空格       0       0     空格
 HZX_TAB         DW 0A3A0H, 0A3A0H, 0B9ABH, 0C0EFH, 0A3A0H, 0A3B0H, 0A3B0H, 0A3A0H
-                 ;  �ո�             ��       ��     �ո�      0       0      �ո� 
+                 ;  空格             价       格     空格      0       0      空格 
                 DW 0A3A0H, 0A3A0H, 0BCDBH, 0B8F1H, 0A3A0H, 0A3B0H, 0A3B0H, 0A3A0H    
 
-HZ_ADR          DB  ?                   ;�����ʾ����ʼ�˿ڵ�ַ
+HZ_ADR          DB  ?                   ;存放显示行起始端口地址
 
-;���̰�����      ;   0      1     2     3
+;键盘按键表      ;   0      1     2     3
 TABLEN           DB 070H, 0B0H, 0D0H, 0E0H
 
-;�Զ���һջ�ռ�
+;自定义一栈空间
 my_stack        dw 0, 0
 DATA            ENDS
 
 code segment
    assume cs:code, ds:data
    
-    ; ��ʾ�ճ�
+    ; 显示空车
 START_K:  MOV AX,DATA
                 MOV DS,AX               
                 MOV DX,IO_ADDRESS
                 ADD DX,3
                 MOV AL,88H
-                OUT DX,AL                       ;8255��ʼ��
+                OUT DX,AL                       ;8255初始化
                mov al,0ffh
                mov dx,300H
                out dx, al
-               CALL CLEARK              ;LCD ���
+               CALL CLEARK              ;LCD 清除
 
                 LEA BX,  HZK_TAB
-                MOV CH,2                        ;��ʾ��2����Ϣ 
+                MOV CH,2                        ;显示第2行信息 
                 CALL  LCD_DISPK
                 LEA BX, HZK_TAB
-                MOV CH,3                  ;    ��ʾ��3����Ϣ
+                MOV CH,3                  ;    显示第3行信息
                 CALL LCD_DISPK
                 
         l1:     jmp     START_1 ;l1
         CLEARK           PROC
                 MOV AL,0CH
                 MOV DX, IO_ADDRESS
-                OUT DX,AL               ;����CLEAR����
-                CALL CMD_SETUPK          ;����LCDִ������
+                OUT DX,AL               ;设置CLEAR命令
+                CALL CMD_SETUPK          ;启动LCD执行命令
                 RET
 CLEARK           ENDP
 
 FUNCUPK          PROC
 
-                MOV AL, 34H             ;LCD��ʾ״̬����
+                MOV AL, 34H             ;LCD显示状态命令
                 OUT DX, AL
                 CALL CMD_SETUPK
                 RET
@@ -104,8 +105,8 @@ LCD_DISPK        PROC
                 LEA BX, HZK_TAB
                 CMP CH, 2
                 JZ  DISP_SECK
-                MOV BYTE PTR HZ_ADR, 88H        ;��������ʼ�˿ڵ�ַ
-                ADD BX,16                        ;ָ��ڶ�����Ϣ
+                MOV BYTE PTR HZ_ADR, 88H        ;第三行起始端口地址
+                ADD BX,16                        ;指向第二行信息
                 JMP  nextK
 DISP_SECK:       MOV BYTE PTR HZ_ADR,90H
 nextK:           mov cl,8
@@ -113,22 +114,22 @@ continueK:       push cx
                 MOV AL,HZ_ADR
                 MOV DX, IO_ADDRESS
                 OUT DX, AL
-                call CMD_SETUPK          ;�趨DDRAM��ַ����
+                call CMD_SETUPK          ;设定DDRAM地址命令
                 MOV AX,[BX]
                 PUSH AX
-                MOV AL,AH               ;���ͺ��ֱ����λ
+                MOV AL,AH               ;先送汉字编码高位
                 MOV DX,IO_ADDRESS
                 OUT DX,AL
-                call DATA_SETUPK         ;������ֱ�����ֽ�
-                call DELAYK              ;�ӳ�
+                call DATA_SETUPK         ;输出汉字编码高字节
+                call DELAYK              ;延迟
                 POP AX
                 MOV DX,IO_ADDRESS
                 OUT DX, AL
-                call DATA_SETUPK         ;������ֱ�����ֽ�
+                call DATA_SETUPK         ;输出汉字编码低字节
                 call DELAYK
                 INC BX
-                INC BX                  ;�޸���ʾ���뻺����ָ��
-                INC BYTE PTR HZ_ADR     ;�޸�LCD��ʾ�˿ڵ�ַ
+                INC BX                  ;修改显示内码缓冲区指针
+                INC BYTE PTR HZ_ADR     ;修改LCD显示端口地址
                 POP CX
                 DEC CL
                 JNZ  continueK
@@ -136,18 +137,18 @@ continueK:       push cx
 LCD_DISPK   ENDP
 
 CMD_SETUPK       PROC
-                MOV DX,IO_ADDRESS                ;ָ��8255�˿ڿ��ƶ˿�
+                MOV DX,IO_ADDRESS                ;指向8255端口控制端口
                 ADD DX,2
                 NOP
-                MOV AL,00000000B                ;PC1��0,pc0��0 ��LCD I��=0��W�ˣ�0��
+                MOV AL,00000000B                ;PC1置0,pc0置0 （LCD I端=0，W端＝0）
                 OUT DX, AL
                 call DELAYK
                 NOP
-                MOV AL,00000100B                ;PC2��1 ��LCD E�ˣ�1��
+                MOV AL,00000100B                ;PC2置1 （LCD E端＝1）
                 OUT DX, AL
                 NOP
                 call DELAYK
-                MOV AL, 00000000B               ;PC2��0,��LCD E����0��
+                MOV AL, 00000000B               ;PC2置0,（LCD E端置0）
                 OUT DX, AL
                 call DELAYK
 
@@ -155,17 +156,17 @@ CMD_SETUPK       PROC
 CMD_SETUPK       ENDP
 
 DATA_SETUPK      PROC
-                MOV DX,IO_ADDRESS                ;ָ��8255���ƶ˿�
+                MOV DX,IO_ADDRESS                ;指向8255控制端口
                 ADD DX,2
-                MOV AL,00000001B                ;PC1��0��PC0=1 ��LCD I��=1��
+                MOV AL,00000001B                ;PC1置0，PC0=1 （LCD I端=1）
                 OUT DX, AL
                 NOP
                 call DELAYK
-                MOV AL,00000101B                ;PC2��1 ��LCD E�ˣ�1��
+                MOV AL,00000101B                ;PC2置1 （LCD E端＝1）
                 OUT DX, AL
                 NOP
                 call DELAYK
-                MOV AL, 00000001B               ;PC2��0,��LCD E�ˣ�0��
+                MOV AL, 00000001B               ;PC2置0,（LCD E端＝0）
                 OUT DX, AL
                 NOP
                 call DELAYK
@@ -184,7 +185,7 @@ DELAYK           ENDP
                 
 
 START_1:
-    pre_START: MOV DX, PORT_0832A                     ; �Ȳ��õ��ת��
+    pre_START: MOV DX, PORT_0832A                     ; 先不让电机转动
     MOV AL, 00H
     OUT DX, AL
     
@@ -192,37 +193,37 @@ START_1:
     mov bx, 0
     mov my_stack[bx], ax
 
-    MOV AL, 88H         ;8255 ��ʼ�� A �ڷ�ʽ 0 ������� C �����룬�� C �������B �ڷ�ʽ 0 ���
+    MOV AL, 88H         ;8255 初始化 A 口方式 0 输出，上 C 口输入，下 C 口输出，B 口方式 0 输出
     MOV DX, PORT_CTL
     OUT DX, AL
 
-    ;���У��鿴�Ƿ����м����ɿ�
-START_2: MOV AL, 88H         ;8255 ��ʼ�� A �ڷ�ʽ 0 ������� C �����룬�� C �������B �ڷ�ʽ 0 ���
+    ;读列，查看是否所有键均松开
+START_2: MOV AL, 88H         ;8255 初始化 A 口方式 0 输出，上 C 口输入，下 C 口输出，B 口方式 0 输出
     MOV DX, PORT_CTL
     OUT DX, AL
     MOV DX, PORT_C
-WAIT_OPEN: IN AL, DX    ;�� C �ڶ�״̬
-    AND AL, 0F0H     ;ֻ��� 4 λ����Ϊ PC7 ~ PC3 �� 0123 ��
-    CMP AL, 0F0H     ;�Ƿ�Ϊ 1(�������ɿ�?)
+WAIT_OPEN: IN AL, DX    ;从 C 口读状态
+    AND AL, 0F0H     ;只查高 4 位，因为 PC7 ~ PC3 接 0123 列
+    CMP AL, 0F0H     ;是否都为 1(各键均松开?)
     JNE WAIT_OPEN
     
-    ;���������ɿ����ٲ����Ƿ��� 0�����Ƿ��м�ѹ��
+    ;各键均已松开，再查列是否有 0，即是否有键压下
 WAIT_PRES: IN AL, DX
     AND AL, 0F0H
     CMP AL, 0F0H
     JE WAIT_PRES
     
-    ;�м�ѹ�£���ʱ 20 ms, ����
+    ;有键压下，延时 20 ms, 消抖
     MOV CX, 16EAH
 DELAY_1: LOOP DELAY_1
 
-    ;�ٲ��У������Ƿ��Ա�ѹ��
+    ;再查列，看键是否仍被压着
     IN AL, DX
     AND AL, 0F0H
     CMP AL, 0F0H
-    JE WAIT_PRES    ;���ɿ���ת���ȴ�ѹ��״̬
+    JE WAIT_PRES    ;已松开，转到等待压键状态
     
-    ;���Ա�ѹ�ţ�ȷ���ĸ�����ѹ��(�� PB0 ��������)
+    ;键仍被压着，确定哪个键被压下(在 PB0 所在行找)
     MOV AL, 0FEH
     MOV DX, PORT_B
     OUT DX, AL
@@ -232,18 +233,18 @@ DELAY_1: LOOP DELAY_1
     CMP AL, 0F0H
     JNE ENCODE
     
-ENCODE: MOV BX, 0003H   ;������ַָ�룬��ָ�� 3
+ENCODE: MOV BX, 0003H   ;建立地址指针，现指向 3
     IN AL, DX
-    AND AL,0F0H         ;ֻȡ����λ
+    AND AL,0F0H         ;只取高四位
 NEXT_TRY: CMP AL, TABLEN[BX]
     JE DONE
     DEC BX
     ;JNS NEXT_TRY
-    ;MOV BX, 0003H       ;��ֹ BX ��Խ����
+    ;MOV BX, 0003H       ;防止 BX 减越界了
     
-DONE: CMP AL, 070H   ;��
+DONE: CMP AL, 070H   ;启
     JE JUMP_ST
-    CMP AL, 0B0H     ;����
+    CMP AL, 0B0H     ;白天
     JE JUMP_DN
     CMP AL, 0D0H
     JE ZZ
@@ -271,7 +272,7 @@ LIGHT: MOV AL,82H
         ;JMP START_2
 ZZ: MOV BX, 19H
     mov AX, 0B0A3H
-    MOV HZX_TAB[BX], AX             ;�������
+    MOV HZX_TAB[BX], AX             ;清零操作
     MOV BX, 1BH
 
     mov AX, 0B0A3H
@@ -295,7 +296,7 @@ ALARM: MOV DX, PORT_CTL
     OUT DX, AL
     MOV AL, 80H
     OUT DX, AL 
-    ;call CONTROL        ;2s ����
+    ;call CONTROL        ;2s 响铃
     MOV AL, 00H
     OUT DX, AL
     JMP START_2
@@ -319,7 +320,7 @@ ENGINE_ON:
     MOV DX, PORT_0832A   
     MOV AL, 0FFH
     OUT DX, AL
-    JMP START_Y     ;��������ת���п�
+    JMP START_Y     ;启动后，跳转到有客
 
 ENGINE_OFF: mov bx, 00h
     mov ax, 00h
@@ -327,13 +328,13 @@ ENGINE_OFF: mov bx, 00h
     MOV DX, PORT_0832A
     MOV AL, 00H
     OUT DX, AL
-    JMP START_K       ;ֹͣ����ת���ճ�
+    JMP START_K       ;停止后，跳转到空车
 
 DAY: mov bx, 02h
     mov ax, 01h
     mov my_stack[bx], ax
 
-    ;��ʼ����
+    ;开始跳数
     MOV BX, 19H
     mov ax, HZX_TAB[BX]
     add ax, 0000h                           ;00
@@ -366,7 +367,7 @@ DAY: mov bx, 02h
 
     MOV BX, 0BH
     mov ax, HZX_TAB[BX]
-    add ax, 0100h                           ;���﹫������һ��
+    add ax, 0100h                           ;这里公里数跳一下
     MOV HZX_TAB[BX], AX
     call START_X
 
@@ -393,7 +394,7 @@ DAY: mov bx, 02h
 
     ;MOV BX, 0BH
     ;mov ax, HZX_TAB[BX]
-    ;add ax, 0100h                           ;���﹫������һ��
+    ;add ax, 0100h                           ;这里公里数跳一下
     ;MOV HZX_TAB[BX], AX
     ;call START_X
 
@@ -418,17 +419,17 @@ DAY: mov bx, 02h
     
     MOV BX, 0BH
     mov ax, HZX_TAB[BX]
-    add ax, 0100h                           ;���﹫������һ��
+    add ax, 0100h                           ;这里公里数跳一下
     MOV HZX_TAB[BX], AX
     call START_X
     ;call CONTROL           
-    JMP START_2                     ;��ת���ȴ�������
+    JMP START_2                     ;跳转到等待按键处
    
 NIGHT: mov bx, 02h
     mov ax, 00h
     mov my_stack[bx], ax
 
-    ;��ʼ����
+    ;开始跳数
     MOV BX, 19H
     mov ax, HZX_TAB[BX]
     mov ax, 0B1A3h
@@ -450,7 +451,7 @@ NIGHT: mov bx, 02h
 
     MOV BX, 0BH
     mov ax, HZX_TAB[BX]
-    add ax, 0100h                           ;���﹫������һ��
+    add ax, 0100h                           ;这里公里数跳一下
     MOV HZX_TAB[BX], AX
     call START_X
 
@@ -470,7 +471,7 @@ NIGHT: mov bx, 02h
 
     MOV BX, 0BH
     mov ax, HZX_TAB[BX]
-    add ax, 0100h                           ;���﹫������һ��
+    add ax, 0100h                           ;这里公里数跳一下
     MOV HZX_TAB[BX], AX
     call START_X
 
@@ -493,7 +494,7 @@ NIGHT: mov bx, 02h
 
     MOV BX, 0BH
     mov ax, HZX_TAB[BX]
-    add ax, 0100h                           ;���﹫������һ��
+    add ax, 0100h                           ;这里公里数跳一下
     MOV HZX_TAB[BX], AX
     call START_X
 
@@ -513,7 +514,7 @@ NIGHT: mov bx, 02h
 
     MOV BX, 0BH
     mov ax, HZX_TAB[BX]
-    add ax, 0100h                           ;���﹫������һ��
+    add ax, 0100h                           ;这里公里数跳一下
     MOV HZX_TAB[BX], AX
     call START_X
 
@@ -531,16 +532,16 @@ NIGHT: mov bx, 02h
 
     MOV BX, 0BH
     mov ax, HZX_TAB[BX]
-    add ax, 0100h                           ;���﹫������һ��
+    add ax, 0100h                           ;这里公里数跳一下
     MOV HZX_TAB[BX], AX
     call START_X     
-    JMP START_2                     ;��ת���ȴ�������
+    JMP START_2                     ;跳转到等待按键处
 
 
     
-    ;8254 ��ʼ��:��ʱ 2S
+    ;8254 初始化:计时 2S
 CONTROL    PROC 
-    MOV AL, 35H    ;ͨ�� 0 ��ʽ�֣��ȵͺ�ߣ���ʽ 2
+    MOV AL, 35H    ;通道 0 方式字；先低后高；方式 2
     MOV DX, PORT_8254_CTL
     OUT DX, AL
     MOV AL, 00H
@@ -549,7 +550,7 @@ CONTROL    PROC
     MOV AL, 50H
     OUT DX, AL
 
-    MOV AL, 77H    ;ͨ�� 1 ��ʽ�֣��ȵͺ�ߣ���ʽ 3
+    MOV AL, 77H    ;通道 1 方式字；先低后高；方式 3
     MOV DX, PORT_8254_CTL
     OUT DX, AL
     MOV AL, 00H
@@ -558,7 +559,7 @@ CONTROL    PROC
     MOV AL, 08H
     OUT DX, AL
     
-    ; T1 ����ɵ͵�ƽ���ߵ�ƽ��T2 ����ɸߵ�ƽ���͵�ƽ
+    ; T1 检测由低电平到高电平，T2 检测由高电平到低电平
     MOV DX, PORT_CTL
     MOV AL, 10001010B
     OUT DX, AL
@@ -572,37 +573,37 @@ CONTROL    PROC
     RET
 CONTROL ENDP
         
-                ;��ʾ�п�
+                ;显示有客
 START_Y:    MOV AX,DATA
                 MOV DS,AX               
                 MOV DX,IO_ADDRESS
                 ADD DX,3
                 MOV AL,88H
-                OUT DX,AL                       ;8255��ʼ��
+                OUT DX,AL                       ;8255初始化
                mov al,0ffh
                mov dx,300H
                out dx, al
-               CALL CLEARY              ;LCD ���
+               CALL CLEARY              ;LCD 清除
 
                 LEA BX,  HZY_TAB
-                MOV CH,2                        ;��ʾ��2����Ϣ 
+                MOV CH,2                        ;显示第2行信息 
                 CALL  LCD_DISPY
                 LEA BX, HZY_TAB
-                MOV CH,3                  ;    ��ʾ��3����Ϣ
+                MOV CH,3                  ;    显示第3行信息
                 CALL LCD_DISPY
         l2:     jmp     START_2 ;l2
 
 CLEARY           PROC
                 MOV AL,0CH
                 MOV DX, IO_ADDRESS
-                OUT DX,AL               ;����CLEAR����
-                CALL CMD_SETUPY          ;����LCDִ������
+                OUT DX,AL               ;设置CLEAR命令
+                CALL CMD_SETUPY          ;启动LCD执行命令
                 RET
 CLEARY           ENDP
 
 FUNCUPY          PROC
 
-                MOV AL, 34H             ;LCD��ʾ״̬����
+                MOV AL, 34H             ;LCD显示状态命令
                 OUT DX, AL
                 CALL CMD_SETUPY
                 RET
@@ -612,8 +613,8 @@ LCD_DISPY        PROC
                 LEA BX, HZY_TAB
                 CMP CH, 2
                 JZ  DISP_SECY
-                MOV BYTE PTR HZ_ADR, 88H        ;��������ʼ�˿ڵ�ַ
-                ADD BX,16                        ;ָ��ڶ�����Ϣ
+                MOV BYTE PTR HZ_ADR, 88H        ;第三行起始端口地址
+                ADD BX,16                        ;指向第二行信息
                 JMP  nextY
 DISP_SECY:       MOV BYTE PTR HZ_ADR,90H
 nextY:           mov cl,8
@@ -621,22 +622,22 @@ continueY:       push cx
                 MOV AL,HZ_ADR
                 MOV DX, IO_ADDRESS
                 OUT DX, AL
-                CALL CMD_SETUPY          ;�趨DDRAM��ַ����
+                CALL CMD_SETUPY          ;设定DDRAM地址命令
                 MOV AX,[BX]
                 PUSH AX
-                MOV AL,AH               ;���ͺ��ֱ����λ
+                MOV AL,AH               ;先送汉字编码高位
                 MOV DX,IO_ADDRESS
                 OUT DX,AL
-                CALL DATA_SETUPY         ;������ֱ�����ֽ�
-                CALL DELAY              ;�ӳ�
+                CALL DATA_SETUPY         ;输出汉字编码高字节
+                CALL DELAY              ;延迟
                 POP AX
                 MOV DX,IO_ADDRESS
                 OUT DX, AL
-                CALL DATA_SETUPY         ;������ֱ�����ֽ�
+                CALL DATA_SETUPY         ;输出汉字编码低字节
                 CALL DELAY
                 INC BX
-                INC BX                  ;�޸���ʾ���뻺����ָ��
-                INC BYTE PTR HZ_ADR     ;�޸�LCD��ʾ�˿ڵ�ַ
+                INC BX                  ;修改显示内码缓冲区指针
+                INC BYTE PTR HZ_ADR     ;修改LCD显示端口地址
                 POP CX
                 DEC CL
                 JNZ  continueY
@@ -644,18 +645,18 @@ continueY:       push cx
 LCD_DISPY   ENDP
 
 CMD_SETUPY       PROC
-                MOV DX,IO_ADDRESS                ;ָ��8255�˿ڿ��ƶ˿�
+                MOV DX,IO_ADDRESS                ;指向8255端口控制端口
                 ADD DX,2
                 NOP
-                MOV AL,00000000B                ;PC1��0,pc0��0 ��LCD I��=0��W�ˣ�0��
+                MOV AL,00000000B                ;PC1置0,pc0置0 （LCD I端=0，W端＝0）
                 OUT DX, AL
                 call DELAY
                 NOP
-                MOV AL,00000100B                ;PC2��1 ��LCD E�ˣ�1��
+                MOV AL,00000100B                ;PC2置1 （LCD E端＝1）
                 OUT DX, AL
                 NOP
                 call DELAY
-                MOV AL, 00000000B               ;PC2��0,��LCD E����0��
+                MOV AL, 00000000B               ;PC2置0,（LCD E端置0）
                 OUT DX, AL
                 call DELAY
 
@@ -663,17 +664,17 @@ CMD_SETUPY       PROC
 CMD_SETUPY       ENDP
 
 DATA_SETUPY      PROC
-                MOV DX,IO_ADDRESS                ;ָ��8255���ƶ˿�
+                MOV DX,IO_ADDRESS                ;指向8255控制端口
                 ADD DX,2
-                MOV AL,00000001B                ;PC1��0��PC0=1 ��LCD I��=1��
+                MOV AL,00000001B                ;PC1置0，PC0=1 （LCD I端=1）
                 OUT DX, AL
                 NOP
                 call DELAY
-                MOV AL,00000101B                ;PC2��1 ��LCD E�ˣ�1��
+                MOV AL,00000101B                ;PC2置1 （LCD E端＝1）
                 OUT DX, AL
                 NOP
                 call DELAY
-                MOV AL, 00000001B               ;PC2��0,��LCD E�ˣ�0��
+                MOV AL, 00000001B               ;PC2置0,（LCD E端＝0）
                 OUT DX, AL
                 NOP
                 call DELAY
@@ -690,38 +691,38 @@ DELAY           PROC
                 RET
 DELAY           ENDP
 
-                ;��ʾ�п�
+                ;显示有客
 START_X    PROC
                MOV AX,DATA
                 MOV DS,AX               
                 MOV DX,IO_ADDRESS
                 ADD DX,3
                 MOV AL,88H
-                OUT DX,AL                       ;8255��ʼ��
+                OUT DX,AL                       ;8255初始化
                mov al,0ffh
                mov dx,300H
                out dx, al
-               CALL CLEARX            ;LCD ���
+               CALL CLEARX            ;LCD 清除
 
                 LEA BX,  HZX_TAB
-                MOV CH,2                        ;��ʾ��2����Ϣ 
+                MOV CH,2                        ;显示第2行信息 
                 CALL  LCD_DISPX
                 LEA BX, HZX_TAB
-                MOV CH,3                  ;    ��ʾ��3����Ϣ
+                MOV CH,3                  ;    显示第3行信息
                 CALL LCD_DISPX
         ;l3:     jmp     START_X ;l3
 
 CLEARX           PROC
                 MOV AL,0CH
                 MOV DX, IO_ADDRESS
-                OUT DX,AL               ;����CLEAR����
-                CALL CMD_SETUPX          ;����LCDִ������
+                OUT DX,AL               ;设置CLEAR命令
+                CALL CMD_SETUPX          ;启动LCD执行命令
                 RET
 CLEARX           ENDP
 
 FUNCUPX          PROC
 
-                MOV AL, 34H             ;LCD��ʾ״̬����
+                MOV AL, 34H             ;LCD显示状态命令
                 OUT DX, AL
                 CALL CMD_SETUPX
                 RET
@@ -731,8 +732,8 @@ LCD_DISPX        PROC
                 LEA BX, HZX_TAB
                 CMP CH, 2
                 JZ  DISP_SECX
-                MOV BYTE PTR HZ_ADR, 88H        ;��������ʼ�˿ڵ�ַ
-                ADD BX,16                        ;ָ��ڶ�����Ϣ
+                MOV BYTE PTR HZ_ADR, 88H        ;第三行起始端口地址
+                ADD BX,16                        ;指向第二行信息
                 JMP  nextX
 DISP_SECX:       MOV BYTE PTR HZ_ADR,90H
 nextX:           mov cl,8
@@ -740,22 +741,22 @@ continueX:       push cx
                 MOV AL,HZ_ADR
                 MOV DX, IO_ADDRESS
                 OUT DX, AL
-                CALL CMD_SETUPX          ;�趨DDRAM��ַ����
+                CALL CMD_SETUPX          ;设定DDRAM地址命令
                 MOV AX,[BX]
                 PUSH AX
-                MOV AL,AH               ;���ͺ��ֱ����λ
+                MOV AL,AH               ;先送汉字编码高位
                 MOV DX,IO_ADDRESS
                 OUT DX,AL
-                CALL DATA_SETUPX         ;������ֱ�����ֽ�
-                CALL DELAX              ;�ӳ�
+                CALL DATA_SETUPX         ;输出汉字编码高字节
+                CALL DELAX              ;延迟
                 POP AX
                 MOV DX,IO_ADDRESS
                 OUT DX, AL
-                CALL DATA_SETUPX         ;������ֱ�����ֽ�
+                CALL DATA_SETUPX         ;输出汉字编码低字节
                 CALL DELAX
                 INC BX
-                INC BX                  ;�޸���ʾ���뻺����ָ��
-                INC BYTE PTR HZ_ADR     ;�޸�LCD��ʾ�˿ڵ�ַ
+                INC BX                  ;修改显示内码缓冲区指针
+                INC BYTE PTR HZ_ADR     ;修改LCD显示端口地址
                 POP CX
                 DEC CL
                 JNZ  continueX
@@ -763,18 +764,18 @@ continueX:       push cx
 LCD_DISPX   ENDP
 
 CMD_SETUPX       PROC
-                MOV DX,IO_ADDRESS                ;ָ��8255�˿ڿ��ƶ˿�
+                MOV DX,IO_ADDRESS                ;指向8255端口控制端口
                 ADD DX,2
                 NOP
-                MOV AL,00000000B                ;PC1��0,pc0��0 ��LCD I��=0��W�ˣ�0��
+                MOV AL,00000000B                ;PC1置0,pc0置0 （LCD I端=0，W端＝0）
                 OUT DX, AL
                 call DELAX
                 NOP
-                MOV AL,00000100B                ;PC2��1 ��LCD E�ˣ�1��
+                MOV AL,00000100B                ;PC2置1 （LCD E端＝1）
                 OUT DX, AL
                 NOP
                 call DELAX
-                MOV AL, 00000000B               ;PC2��0,��LCD E����0��
+                MOV AL, 00000000B               ;PC2置0,（LCD E端置0）
                 OUT DX, AL
                 call DELAX
 
@@ -782,17 +783,17 @@ CMD_SETUPX       PROC
 CMD_SETUPX       ENDP
 
 DATA_SETUPX      PROC
-                MOV DX,IO_ADDRESS                ;ָ��8255���ƶ˿�
+                MOV DX,IO_ADDRESS                ;指向8255控制端口
                 ADD DX,2
-                MOV AL,00000001B                ;PC1��0��PC0=1 ��LCD I��=1��
+                MOV AL,00000001B                ;PC1置0，PC0=1 （LCD I端=1）
                 OUT DX, AL
                 NOP
                 call DELAX
-                MOV AL,00000101B                ;PC2��1 ��LCD E�ˣ�1��
+                MOV AL,00000101B                ;PC2置1 （LCD E端＝1）
                 OUT DX, AL
                 NOP
                 call DELAX
-                MOV AL, 00000001B               ;PC2��0,��LCD E�ˣ�0��
+                MOV AL, 00000001B               ;PC2置0,（LCD E端＝0）
                 OUT DX, AL
                 NOP
                 call DELAX
