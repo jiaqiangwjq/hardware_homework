@@ -350,31 +350,20 @@ DAY: mov bx, 02h
     add ax, 0000h                           ;00
     mov HZX_TAB[BX],ax
     call START_X
-    ;CALL TC
     call CONTROL
 
-    ;mov AX, 0B1A3H
-    ;call CONTROL
     MOV BX, 1BH
     mov ax, HZX_TAB[BX]
     add ax, 0600h                            ;06
     MOV HZX_TAB[BX], AX
     call START_X
-    ;CALL TC
     call CONTROL
-    MOV BX, 0BH
-    mov ax, HZX_TAB[BX]
-    add ax, 0100h                           ;这里公里数跳一下
-    MOV HZX_TAB[BX], AX
-    call START_X
 
-    call CONTROL
     MOV BX, 0BH
     mov ax, HZX_TAB[BX]
     add ax, 0100h                           ;这里公里数跳一下
     MOV HZX_TAB[BX], AX
     call START_X
-    ;CALL TC
     call CONTROL
 
     MOV BX, 1BH
@@ -382,7 +371,6 @@ DAY: mov bx, 02h
     add ax, 0100h                           ;07
     MOV HZX_TAB[BX], AX
     call START_X
-    ;CALL TC
     call CONTROL
 
     MOV BX, 1BH
@@ -397,36 +385,29 @@ DAY: mov bx, 02h
     add ax, 0100h                           ;这里公里数跳一下
     MOV HZX_TAB[BX], AX
     call START_X
-
-    MOV BX, 1BH
-    mov ax, HZX_TAB[BX]
-    add ax, 0100h                           ;09
-    MOV HZX_TAB[BX], AX
-    call START_X
-    call CONTROL
     
-    MOV BX, 19H
+    ;MOV BX, 19H
     ;mov ax, HZX_TAB[BX]
-    mov ax, 0B1A3h                           ;10
-    MOV HZX_TAB[BX], AX
-    MOV BX, 1BH
-    MOV AX, 0B0A3H
-    MOV HZX_TAB[BX],AX
-    call START_X
-    call CONTROL
+    ;mov ax, 0B1A3h                           ;10
+    ;MOV HZX_TAB[BX], AX
+    ;MOV BX, 1BH
+    ;MOV AX, 0B0A3H
+    ;MOV HZX_TAB[BX],AX
+    ;call START_X
+    ;call CONTROL
 
-    MOV BX, 1BH
-    mov ax, HZX_TAB[BX]
-    add ax, 0100h                           ;11
-    MOV HZX_TAB[BX], AX
-    call START_X
-    call CONTROL
+    ;MOV BX, 1BH
+    ;mov ax, HZX_TAB[BX]
+    ;add ax, 0100h                           ;11
+    ;MOV HZX_TAB[BX], AX
+    ;call START_X
+    ;call CONTROL
 
-    MOV BX, 0BH
-    mov ax, HZX_TAB[BX]
-    add ax, 0100h                           ;这里公里数跳一下
-    MOV HZX_TAB[BX], AX
-    call START_X
+    ;MOV BX, 0BH
+    ;mov ax, HZX_TAB[BX]
+    ;add ax, 0100h                           ;这里公里数跳一下
+    ;MOV HZX_TAB[BX], AX
+    ;call START_X
 
     ;call CONTROL           
     JMP START_2                     ;跳转到等待按键处
@@ -436,10 +417,26 @@ NIGHT: mov bx, 02h
     mov my_stack[bx], ax
 
     ;开始跳数
+    MOV BX, 1BH
+    MOV AX, 0B9A3h
+    MOV HZX_TAB[BX], AX             ; 09
+    MOV BX, 19H
+    MOV AX, 0B0A3h
+    MOV HZX_TAB[BX], AX
+    call START_X
+    call CONTROL
+
     MOV BX, 0BH
     mov ax, HZX_TAB[BX]
     add ax, 0100h                           ;这里公里数跳一下
+    
+    MOV BX, 1BH
+    MOV AX, 0B1A3h
+    MOV HZX_TAB[BX], AX             ; 11
+    MOV BX, 19H
+    MOV AX, 0B1A3h
     MOV HZX_TAB[BX], AX
+
     call START_X
     call CONTROL
 
@@ -447,7 +444,7 @@ NIGHT: mov bx, 02h
     ;call CONTROL
     MOV BX, 1BH
     mov ax, HZX_TAB[BX]
-    MOV ax, 0B3A3h                            ;10
+    MOV ax, 0B3A3h                            ;13
     MOV HZX_TAB[BX], AX
     MOV BX, 19H
     mov ax, HZX_TAB[BX]
@@ -464,14 +461,14 @@ NIGHT: mov bx, 02h
 
     MOV BX, 1BH
     mov ax, HZX_TAB[BX]
-    add ax, 0200h                           ;14
+    add ax, 0200h                           ;15
     MOV HZX_TAB[BX], AX
     call START_X
     call CONTROL
 
     MOV BX, 1BH
     mov ax, HZX_TAB[BX]
-    add ax, 0200h                           ;16
+    add ax, 0200h                           ;17
     MOV HZX_TAB[BX], AX
     call START_X
     call CONTROL
@@ -482,44 +479,44 @@ NIGHT: mov bx, 02h
     MOV HZX_TAB[BX], AX
     call START_X
 
-    MOV BX, 1BH
-    mov ax, HZX_TAB[BX]
-    add ax, 0200h                           ;18
-    MOV HZX_TAB[BX], AX
-    call START_X
-    call CONTROL
+    ;MOV BX, 1BH
+    ;mov ax, HZX_TAB[BX]
+    ;add ax, 0200h                           ;19
+    ;MOV HZX_TAB[BX], AX
+    ;call START_X
+    ;call CONTROL
 
-    MOV BX, 19H
-    mov ax, HZX_TAB[BX]
-    MOV ax, 0B1A3H
-    mov HZX_TAB[BX],ax
-    MOV BX, 1BH
-    mov ax, 0B9A3H                          ;20
-    MOV HZX_TAB[BX], AX
-    call START_X
-    call CONTROL
+    ;MOV BX, 19H
+    ;mov ax, HZX_TAB[BX]
+    ;MOV ax, 0B2A3H
+    ;mov HZX_TAB[BX],ax
+    ;MOV BX, 1BH
+    ;mov ax, 0B1A3H                          ;21
+    ;MOV HZX_TAB[BX], AX
+    ;call START_X
+    ;call CONTROL
 
-    MOV BX, 0BH
-    mov ax, HZX_TAB[BX]
-    add ax, 0100h                           ;这里公里数跳一下
-    MOV HZX_TAB[BX], AX
-    call START_X
+    ;MOV BX, 0BH
+    ;mov ax, HZX_TAB[BX]
+    ;add ax, 0100h                           ;这里公里数跳一下
+    ;MOV HZX_TAB[BX], AX
+    ;call START_X
 
-    MOV BX, 19H
-    mov ax, HZX_TAB[BX]
-    MOV ax, 0B2A3H
-    mov HZX_TAB[BX],ax
-    MOV BX, 1BH
-    mov ax, 0B1A3H                          ;20
-    MOV HZX_TAB[BX], AX
-    call START_X
-    call CONTROL
+    ;MOV BX, 19H
+    ;mov ax, HZX_TAB[BX]
+    ;MOV ax, 0B2A3H
+    ;mov HZX_TAB[BX],ax
+    ;MOV BX, 1BH
+    ;mov ax, 0B3A3H                          ;23
+    ;MOV HZX_TAB[BX], AX
+    ;call START_X
+    ;call CONTROL
     
-    MOV BX, 1BH
-    mov ax, HZX_TAB[BX]
-    add ax, 0200h                           ;24
-    MOV HZX_TAB[BX], AX
-    call START_X
+    ;MOV BX, 1BH
+    ;mov ax, HZX_TAB[BX]
+    ;add ax, 0200h                           ;24
+    ;MOV HZX_TAB[BX], AX
+    ;call START_X
     ;call CONTROL
     ;call START_X     
     JMP START_2                     ;跳转到等待按键处
